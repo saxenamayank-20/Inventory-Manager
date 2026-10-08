@@ -182,9 +182,6 @@ with st.sidebar:
         ["🏠 Dashboard", "➕ Add Item", "✏️ Update Item", "🗑️ Delete Item", "🔍 Search Items"],
         label_visibility="collapsed"
     )
-    st.markdown("---")
-    st.markdown("**📖 API Docs**")
-    st.markdown(f"[Open Swagger UI]({BASE_URL}/docs)")
 
 
 # dashboard page
