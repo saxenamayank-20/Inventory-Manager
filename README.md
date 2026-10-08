@@ -52,8 +52,8 @@ flowchart LR
 Prerequisites: Python 3.11+ and git. MySQL is optional: without it the backend uses a local SQLite file.
 
 ```bash
-git clone https://github.com/saxenamayank-20/Inventory_Manager.git
-cd Inventory_Manager
+git clone https://github.com/saxenamayank-20/Inventory-Manager.git
+cd Inventory-Manager
 
 python3 -m venv .venv
 source .venv/bin/activate        # windows: .venv\Scripts\activate
