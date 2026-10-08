@@ -49,7 +49,7 @@ def update_item(db: Session, item_id: int, updates: schemas.ItemUpdate) -> model
         return None
 
     # Only update fields that were explicitly provided (not None)
-    update_data = updates.model_dump(exclude_unset=True)
+    update_data = updates.model_dump(exclude_unset=True, exclude_none=True)
     for field, value in update_data.items():
         setattr(db_item, field, value)
 
