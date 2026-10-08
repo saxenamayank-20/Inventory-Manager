@@ -10,8 +10,6 @@ A small app I built to add, edit, search and delete items in a product inventory
   <img src="docs/screenshots/api-docs.png" width="32%" alt="Swagger API docs">
 </p>
 
-- API docs (Render): https://inventory-manager-sqqa.onrender.com/docs
-
 ## Why I built it
 
 I wanted to build a full CRUD app with a separate frontend and backend, and deploy each part on its own free host. Keeping stock in a spreadsheet gets messy fast, so an inventory app was a good fit.
