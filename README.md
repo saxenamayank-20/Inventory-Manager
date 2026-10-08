@@ -34,7 +34,7 @@ I wanted to build a full CRUD app with a separate frontend and backend, and depl
 - MySQL (Clever Cloud) in production, SQLite locally if no `DATABASE_URL` is set
 - pytest for the API tests
 
-Hosting: the backend is on Render, the frontend on Streamlit Cloud, and the database on Clever Cloud. Setup notes are in [docs/deploy.md](docs/deploy.md).
+Hosting: the backend is on Render, the frontend on Streamlit Cloud, and the database on Clever Cloud.
 
 ## How it works
 
@@ -64,7 +64,7 @@ pip install -r requirements.txt
 Create a `.env` file in the project root. Both variables are optional:
 
 - `DATABASE_URL`: MySQL connection string (`mysql://user:password@host:port/db`). Without it the backend uses SQLite.
-- `BACKEND_URL`: where the frontend finds the API. Set it to `http://127.0.0.1:8000` to use your local backend. Without it the frontend uses the Render backend.
+- `BACKEND_URL`: where the frontend finds the API. Point it at your local backend to use that. Without it the frontend uses the Render backend.
 
 Start the backend (terminal 1):
 
@@ -72,15 +72,11 @@ Start the backend (terminal 1):
 uvicorn backend.main:app --reload
 ```
 
-The API runs at http://127.0.0.1:8000, with docs at http://127.0.0.1:8000/docs.
-
 Start the frontend (terminal 2, with the `.venv` activated):
 
 ```bash
 streamlit run frontend/app.py
 ```
-
-The app opens at http://localhost:8501.
 
 ## API routes
 
@@ -100,7 +96,7 @@ The app opens at http://localhost:8501.
 backend/      fastapi app, db setup, models, schemas, crud
 frontend/     streamlit app
 tests/        api tests (pytest, sqlite)
-docs/         screenshots and deploy notes
+docs/         screenshots
 .streamlit/   streamlit theme config
 ```
 
