@@ -1,14 +1,14 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
 from datetime import datetime
 
 
 class ItemBase(BaseModel):
     """Shared fields used in both create and update schemas."""
-    name:        str   = Field(..., min_length=1, max_length=100, example="Laptop")
-    description: Optional[str] = Field(None, example="A powerful laptop")
-    price:       float = Field(..., gt=0, example=49999.99)
-    quantity:    int   = Field(..., ge=0, example=10)
+    name:        str   = Field(..., min_length=1, max_length=100, examples=["Laptop"])
+    description: Optional[str] = Field(None, examples=["A powerful laptop"])
+    price:       float = Field(..., gt=0, examples=[49999.99])
+    quantity:    int   = Field(..., ge=0, examples=[10])
 
 
 class ItemCreate(ItemBase):
@@ -18,10 +18,10 @@ class ItemCreate(ItemBase):
 
 class ItemUpdate(BaseModel):
     """Schema for updating an existing item (PUT request body) — all fields optional."""
-    name:        Optional[str]   = Field(None, min_length=1, max_length=100, example="Gaming Laptop")
-    description: Optional[str]   = Field(None, example="Updated description")
-    price:       Optional[float] = Field(None, gt=0, example=59999.99)
-    quantity:    Optional[int]   = Field(None, ge=0, example=5)
+    name:        Optional[str]   = Field(None, min_length=1, max_length=100, examples=["Gaming Laptop"])
+    description: Optional[str]   = Field(None, examples=["Updated description"])
+    price:       Optional[float] = Field(None, gt=0, examples=[59999.99])
+    quantity:    Optional[int]   = Field(None, ge=0, examples=[5])
 
 
 class ItemResponse(ItemBase):
@@ -30,5 +30,4 @@ class ItemResponse(ItemBase):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True  # Enables ORM model → Pydantic conversion
+    model_config = ConfigDict(from_attributes=True)  # Enables ORM model → Pydantic conversion
