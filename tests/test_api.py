@@ -58,6 +58,13 @@ def test_update_with_nulls_keeps_old_values():
     assert r.json()["price"] == 500.0
 
 
+def test_update_can_clear_description():
+    item = make_item()
+    r = client.put(f"/items/{item['id']}", json={"description": None})
+    assert r.status_code == 200
+    assert r.json()["description"] is None
+
+
 def test_delete():
     item = make_item()
     assert client.delete(f"/items/{item['id']}").status_code == 200

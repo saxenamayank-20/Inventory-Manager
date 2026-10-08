@@ -49,8 +49,11 @@ def update_item(db: Session, item_id: int, updates: schemas.ItemUpdate) -> model
         return None
 
     # Only update fields that were explicitly provided (not None)
-    update_data = updates.model_dump(exclude_unset=True, exclude_none=True)
+    update_data = updates.model_dump(exclude_unset=True)
     for field, value in update_data.items():
+        # name, price, quantity can't be null in the db, description can
+        if value is None and field != "description":
+            continue
         setattr(db_item, field, value)
 
     db.commit()
