@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # backend url, set BACKEND_URL to point at a local backend
-BASE_URL = (os.getenv("BACKEND_URL") or "https://inventory-manager-sqqa.onrender.com").rstrip("/")
+BASE_URL = (os.getenv("BACKEND_URL") or "https://inventory-manager-1-zdlf.onrender.com").rstrip("/")
 # render free plan goes to sleep, so first call can be slow
 TIMEOUT = 60
 
@@ -183,8 +183,6 @@ with st.sidebar:
         label_visibility="collapsed"
     )
     st.markdown("---")
-    st.markdown("**📡 Backend URL**")
-    st.code(BASE_URL)
     st.markdown("**📖 API Docs**")
     st.markdown(f"[Open Swagger UI]({BASE_URL}/docs)")
 
