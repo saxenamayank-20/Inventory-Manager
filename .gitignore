@@ -1,27 +1,27 @@
-# Virtual environment - NEVER commit this
+# virtual env
 venv/
 env/
 .venv/
 
-# Python cache
+# python cache
 __pycache__/
 *.py[cod]
 *.pyc
 *.pyo
 
-# Database files
+# local sqlite db
 *.db
 inventory.db
 
-# Environment variables (contains passwords!)
+# secrets
 .env
 crud_app/.env
 
-# IDE
+# editor
 .vscode/
 .idea/
 
-# OS
+# os junk
 .DS_Store
 Thumbs.db
 

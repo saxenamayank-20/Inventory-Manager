@@ -4,13 +4,11 @@ import streamlit as st
 import requests
 from dotenv import load_dotenv
 
-# ─────────────────────────────────────────────
-# Configuration
-# ─────────────────────────────────────────────
+# config
 load_dotenv()
 
 # backend url, set BACKEND_URL to point at a local backend
-BASE_URL = os.getenv("BACKEND_URL", "https://inventory-manager-sqqa.onrender.com").rstrip("/")
+BASE_URL = (os.getenv("BACKEND_URL") or "https://inventory-manager-sqqa.onrender.com").rstrip("/")
 # render free plan goes to sleep, so first call can be slow
 TIMEOUT = 60
 
@@ -21,9 +19,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# ─────────────────────────────────────────────
-# Custom CSS
-# ─────────────────────────────────────────────
+# custom css
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -32,7 +28,7 @@ st.markdown("""
         font-family: 'Inter', sans-serif;
     }
 
-    /* Dark glassmorphism sidebar */
+    /* sidebar */
     [data-testid="stSidebar"] {
         background: linear-gradient(160deg, #0f0c29, #302b63, #24243e) !important;
     }
@@ -40,13 +36,13 @@ st.markdown("""
         color: #e2e8f0 !important;
     }
 
-    /* Main background */
+    /* page background */
     .stApp {
         background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
         color: #f1f5f9;
     }
 
-    /* Card style */
+    /* cards */
     .card {
         background: rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(10px);
@@ -60,7 +56,7 @@ st.markdown("""
         transform: translateY(-2px);
     }
 
-    /* Metric cards */
+    /* metrics */
     [data-testid="metric-container"] {
         background: rgba(255,255,255,0.07);
         border: 1px solid rgba(255,255,255,0.1);
@@ -68,7 +64,7 @@ st.markdown("""
         padding: 16px;
     }
 
-    /* Buttons */
+    /* buttons */
     .stButton > button {
         background: linear-gradient(135deg, #667eea, #764ba2);
         color: white;
@@ -86,7 +82,7 @@ st.markdown("""
         box-shadow: 0 8px 20px rgba(102,126,234,0.4);
     }
 
-    /* Inputs */
+    /* inputs */
     .stTextInput > div > div > input,
     .stNumberInput > div > div > input,
     .stTextArea > div > div > textarea {
@@ -97,18 +93,18 @@ st.markdown("""
         padding: 10px 14px !important;
     }
 
-    /* Success / Error alerts */
+    /* alerts */
     .stSuccess, .stError, .stInfo, .stWarning {
         border-radius: 10px !important;
     }
 
-    /* Dataframe */
+    /* table */
     [data-testid="stDataFrame"] {
         border-radius: 12px;
         overflow: hidden;
     }
 
-    /* Section headers */
+    /* page headings */
     .section-header {
         font-size: 24px;
         font-weight: 700;
@@ -123,7 +119,7 @@ st.markdown("""
         margin-bottom: 20px;
     }
     
-    /* Nav radio buttons */
+    /* nav */
     .stRadio > div {
         gap: 8px;
     }
@@ -142,9 +138,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# ─────────────────────────────────────────────
-# Helper Functions
-# ─────────────────────────────────────────────
+# helpers
 def fetch_all_items():
     try:
         r = requests.get(f"{BASE_URL}/items", timeout=TIMEOUT)
@@ -171,14 +165,12 @@ def check_backend():
         return False
 
 
-# ─────────────────────────────────────────────
-# Sidebar
-# ─────────────────────────────────────────────
+# sidebar
 with st.sidebar:
     st.markdown("## 📦 Inventory Manager")
     st.markdown("---")
 
-    # Backend status indicator
+    # api status
     if check_backend():
         st.success("✅ API Connected")
     else:
@@ -197,9 +189,7 @@ with st.sidebar:
     st.markdown(f"[Open Swagger UI]({BASE_URL}/docs)")
 
 
-# ─────────────────────────────────────────────
-# Dashboard Page
-# ─────────────────────────────────────────────
+# dashboard page
 if page == "🏠 Dashboard":
     st.markdown('<p class="section-header">🏠 Inventory Dashboard</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Overview of all items in the inventory database.</p>', unsafe_allow_html=True)
@@ -207,7 +197,7 @@ if page == "🏠 Dashboard":
     items = fetch_all_items()
 
     if items:
-        # KPI metrics
+        # numbers at the top
         total_items = len(items)
         total_quantity = sum(i["quantity"] for i in items)
         total_value = sum(i["price"] * i["quantity"] for i in items)
@@ -222,7 +212,7 @@ if page == "🏠 Dashboard":
         st.markdown("---")
         st.markdown("### 📋 All Items")
 
-        # Format for display
+        # tidy up the columns for the table
         import pandas as pd
         df = pd.DataFrame(items)
         df = df[["id", "name", "description", "price", "quantity", "created_at"]]
@@ -234,9 +224,7 @@ if page == "🏠 Dashboard":
         st.info("🫙 No items in inventory yet. Use **➕ Add Item** to get started!")
 
 
-# ─────────────────────────────────────────────
-# Add Item Page
-# ─────────────────────────────────────────────
+# add item page
 elif page == "➕ Add Item":
     st.markdown('<p class="section-header">➕ Add New Item</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Fill in the details below to add a new product to the inventory.</p>', unsafe_allow_html=True)
@@ -274,16 +262,14 @@ elif page == "➕ Add Item":
                 st.error("❌ Cannot reach backend. Is FastAPI running?")
 
 
-# ─────────────────────────────────────────────
-# Update Item Page
-# ─────────────────────────────────────────────
+# update item page
 elif page == "✏️ Update Item":
     st.markdown('<p class="section-header">✏️ Update Existing Item</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Enter an Item ID and update any of its fields.</p>', unsafe_allow_html=True)
 
     item_id = st.number_input("🔍 Enter Item ID to Update", min_value=1, step=1, key="update_id")
 
-    # Fetch current data for preview
+    # load the item first so the form comes prefilled
     if st.button("📥 Load Item Data"):
         try:
             r = requests.get(f"{BASE_URL}/items/{int(item_id)}", timeout=TIMEOUT)
@@ -296,7 +282,7 @@ elif page == "✏️ Update Item":
         except requests.exceptions.RequestException:
             st.error("❌ Cannot reach backend.")
 
-    # Show update form if item is loaded
+    # form only shows once an item is loaded
     if "loaded_item" in st.session_state:
         item = st.session_state["loaded_item"]
         st.info(f"📦 Editing: **{item['name']}** (ID: {item['id']})")
@@ -331,16 +317,14 @@ elif page == "✏️ Update Item":
                 st.error("❌ Cannot reach backend.")
 
 
-# ─────────────────────────────────────────────
-# Delete Item Page
-# ─────────────────────────────────────────────
+# delete item page
 elif page == "🗑️ Delete Item":
     st.markdown('<p class="section-header">🗑️ Delete Item</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Permanently remove an item from the inventory.</p>', unsafe_allow_html=True)
 
     item_id = st.number_input("🔍 Enter Item ID to Delete", min_value=1, step=1, key="del_id")
 
-    # Preview before delete
+    # show the item first so the wrong one doesn't get deleted
     if st.button("🔎 Preview Item"):
         try:
             r = requests.get(f"{BASE_URL}/items/{int(item_id)}", timeout=TIMEOUT)
@@ -374,9 +358,7 @@ elif page == "🗑️ Delete Item":
                 st.rerun()
 
 
-# ─────────────────────────────────────────────
-# Search Items Page
-# ─────────────────────────────────────────────
+# search page
 elif page == "🔍 Search Items":
     st.markdown('<p class="section-header">🔍 Search Items</p>', unsafe_allow_html=True)
     st.markdown('<p class="sub-header">Search the inventory by item name (partial match supported).</p>', unsafe_allow_html=True)

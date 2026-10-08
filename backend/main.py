@@ -6,14 +6,10 @@ from typing import List
 from backend.database import engine, get_db
 from backend import models, crud, schemas
 
-# ─────────────────────────────────────────────
-# Create all tables in MySQL on startup
-# ─────────────────────────────────────────────
+# create the tables if they don't exist yet
 models.Base.metadata.create_all(bind=engine)
 
-# ─────────────────────────────────────────────
-# FastAPI App
-# ─────────────────────────────────────────────
+# app
 app = FastAPI(
     title="Item Inventory API",
     description="A full-stack CRUD API built with FastAPI and MySQL. Manage your inventory with ease!",
@@ -21,27 +17,23 @@ app = FastAPI(
     contact={"name": "Mayank Saxena"},
 )
 
-# Allow Streamlit frontend to talk to this API
+# let the streamlit app call the api
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, restrict this to your frontend URL
+    allow_origins=["*"],  # open to everyone for now
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# ─────────────────────────────────────────────
-# Root
-# ─────────────────────────────────────────────
+# health check
 @app.get("/", tags=["Health"])
 def root():
     return {"message": "🚀 Item Inventory API is running!", "docs": "/docs"}
 
 
-# ─────────────────────────────────────────────
-# CREATE — POST /items
-# ─────────────────────────────────────────────
+# POST /items
 @app.post(
     "/items",
     response_model=schemas.ItemResponse,
@@ -50,13 +42,11 @@ def root():
     summary="Create a new item",
 )
 def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
-    """Add a new item to the inventory database."""
+    """Add a new item."""
     return crud.create_item(db=db, item=item)
 
 
-# ─────────────────────────────────────────────
-# READ ALL — GET /items
-# ─────────────────────────────────────────────
+# GET /items
 @app.get(
     "/items",
     response_model=List[schemas.ItemResponse],
@@ -64,13 +54,11 @@ def create_item(item: schemas.ItemCreate, db: Session = Depends(get_db)):
     summary="Get all items",
 )
 def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
-    """Retrieve a paginated list of all items in the inventory."""
+    """List items, 100 at a time by default."""
     return crud.get_items(db=db, skip=skip, limit=limit)
 
 
-# ─────────────────────────────────────────────
-# SEARCH — GET /items/search
-# ─────────────────────────────────────────────
+# GET /items/search, has to be above /items/{item_id} or 'search' gets read as an id
 @app.get(
     "/items/search",
     response_model=List[schemas.ItemResponse],
@@ -78,7 +66,7 @@ def read_items(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     summary="Search items by name",
 )
 def search_items(keyword: str, db: Session = Depends(get_db)):
-    """Search items by partial name match (case-insensitive)."""
+    """Search by name, partial and case-insensitive. 404 if nothing matches."""
     results = crud.search_items(db=db, keyword=keyword)
     if not results:
         raise HTTPException(
@@ -88,9 +76,7 @@ def search_items(keyword: str, db: Session = Depends(get_db)):
     return results
 
 
-# ─────────────────────────────────────────────
-# READ ONE — GET /items/{item_id}
-# ─────────────────────────────────────────────
+# GET /items/{item_id}
 @app.get(
     "/items/{item_id}",
     response_model=schemas.ItemResponse,
@@ -98,7 +84,7 @@ def search_items(keyword: str, db: Session = Depends(get_db)):
     summary="Get a single item by ID",
 )
 def read_item(item_id: int, db: Session = Depends(get_db)):
-    """Retrieve a specific item from the database by its ID."""
+    """Get one item by id."""
     db_item = crud.get_item(db=db, item_id=item_id)
     if db_item is None:
         raise HTTPException(
@@ -108,9 +94,7 @@ def read_item(item_id: int, db: Session = Depends(get_db)):
     return db_item
 
 
-# ─────────────────────────────────────────────
-# UPDATE — PUT /items/{item_id}
-# ─────────────────────────────────────────────
+# PUT /items/{item_id}
 @app.put(
     "/items/{item_id}",
     response_model=schemas.ItemResponse,
@@ -118,7 +102,7 @@ def read_item(item_id: int, db: Session = Depends(get_db)):
     summary="Update an existing item",
 )
 def update_item(item_id: int, updates: schemas.ItemUpdate, db: Session = Depends(get_db)):
-    """Update one or more fields of an existing item. Only provided fields are updated."""
+    """Update only the fields you send."""
     updated = crud.update_item(db=db, item_id=item_id, updates=updates)
     if updated is None:
         raise HTTPException(
@@ -128,16 +112,14 @@ def update_item(item_id: int, updates: schemas.ItemUpdate, db: Session = Depends
     return updated
 
 
-# ─────────────────────────────────────────────
-# DELETE — DELETE /items/{item_id}
-# ─────────────────────────────────────────────
+# DELETE /items/{item_id}
 @app.delete(
     "/items/{item_id}",
     tags=["Items"],
     summary="Delete an item",
 )
 def delete_item(item_id: int, db: Session = Depends(get_db)):
-    """Permanently delete an item from the inventory by its ID."""
+    """Delete an item by id."""
     deleted = crud.delete_item(db=db, item_id=item_id)
     if deleted is None:
         raise HTTPException(

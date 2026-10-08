@@ -1,1 +1,1 @@
-# This file makes 'backend' a Python package
+# makes backend a package

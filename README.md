@@ -35,7 +35,7 @@ I wanted to build a full CRUD app with a separate frontend and backend, and depl
 - MySQL (Clever Cloud) in production, SQLite locally if no `DATABASE_URL` is set
 - pytest for the API tests
 
-Hosting: the backend is on Render, the frontend on Streamlit Cloud, and the database on Clever Cloud.
+Hosting: the backend is on Render, the frontend on Streamlit Cloud, and the database on Clever Cloud. Setup notes are in [docs/deploy.md](docs/deploy.md).
 
 ## How it works
 
@@ -60,14 +60,12 @@ python3 -m venv .venv
 source .venv/bin/activate        # windows: .venv\Scripts\activate
 
 pip install -r requirements.txt
-
-cp .env.example .env             # windows: copy .env.example .env
 ```
 
-Fill in `.env`:
+Create a `.env` file in the project root. Both variables are optional:
 
-- `DATABASE_URL`: MySQL connection string (`mysql+pymysql://...`). Remove the line to use SQLite.
-- `BACKEND_URL`: where the frontend finds the API. Use `http://127.0.0.1:8000` for local.
+- `DATABASE_URL`: MySQL connection string (`mysql+pymysql://user:password@host:port/db`). Without it the backend uses SQLite.
+- `BACKEND_URL`: where the frontend finds the API. Set it to `http://127.0.0.1:8000` to use your local backend. Without it the frontend uses the Render backend.
 
 Start the backend (terminal 1):
 
@@ -84,11 +82,6 @@ streamlit run frontend/app.py
 ```
 
 The app opens at http://localhost:8501.
-
-## Deploying
-
-- **Render (backend):** build command `pip install -r requirements.txt`, start command `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`. Set `DATABASE_URL` to the Clever Cloud MySQL URL.
-- **Streamlit Cloud (frontend):** main file `frontend/app.py`. It uses the Render URL by default. Set `BACKEND_URL` in the app's secrets to point somewhere else.
 
 ## API routes
 
@@ -108,7 +101,7 @@ The app opens at http://localhost:8501.
 backend/      fastapi app, db setup, models, schemas, crud
 frontend/     streamlit app
 tests/        api tests (pytest, sqlite)
-docs/         screenshots
+docs/         screenshots and deploy notes
 .streamlit/   streamlit theme config
 ```
 

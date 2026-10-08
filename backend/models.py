@@ -4,9 +4,6 @@ from backend.database import Base
 
 
 class Item(Base):
-    """
-    SQLAlchemy ORM model for the 'items' table in MySQL.
-    """
     __tablename__ = "items"
 
     id          = Column(Integer, primary_key=True, index=True, autoincrement=True)
