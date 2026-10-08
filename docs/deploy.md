@@ -4,15 +4,9 @@ The backend runs on Render, the frontend on Streamlit Cloud and the database on 
 
 ## Database (Clever Cloud)
 
-Open the MySQL add-on → Environment variables and note `MYSQL_ADDON_HOST`, `MYSQL_ADDON_PORT`, `MYSQL_ADDON_DB`, `MYSQL_ADDON_USER` and `MYSQL_ADDON_PASSWORD`.
+Open the MySQL add-on → Environment variables and copy `MYSQL_ADDON_URI`. It looks like `mysql://USER:PASSWORD@HOST:PORT/DB` and can be used as `DATABASE_URL` as is. The backend switches it to PyMySQL itself.
 
-The backend wants them as one URL:
-
-```
-mysql+pymysql://USER:PASSWORD@HOST:PORT/DB
-```
-
-If the password has `@ # / : ?` or `%` in it, encode those characters (`@` → `%40`, `#` → `%23`).
+The free plan allows only 5 connections per user, so the backend keeps its pool at 3.
 
 ## Backend (Render)
 
@@ -28,7 +22,7 @@ Environment variables:
 
 | Key | Value |
 |---|---|
-| `DATABASE_URL` | the MySQL URL above |
+| `DATABASE_URL` | `MYSQL_ADDON_URI` from Clever Cloud |
 | `PYTHON_VERSION` | `3.12.3` |
 
 Tables get created on the first start. The free plan sleeps after a while, so the first request after that is slow.
@@ -45,5 +39,5 @@ Tables get created on the first start. The free plan sleeps after a while, so th
 |---|---|
 | `Access denied` / `Unknown database` | wrong user, password or db name in `DATABASE_URL`, or a special character in the password isn't encoded |
 | `Can't connect to MySQL server` | wrong host or port |
-| `Too many connections` | Clever Cloud's free MySQL allows very few connections, so the SQLAlchemy pool needs to be smaller |
+| `Too many connections` | something else is holding connections (another local run, a SQL client), close it and redeploy |
 | `cryptography package is required` | PyMySQL needs the `cryptography` package for this MySQL login method |

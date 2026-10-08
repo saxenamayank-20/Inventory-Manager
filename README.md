@@ -64,7 +64,7 @@ pip install -r requirements.txt
 
 Create a `.env` file in the project root. Both variables are optional:
 
-- `DATABASE_URL`: MySQL connection string (`mysql+pymysql://user:password@host:port/db`). Without it the backend uses SQLite.
+- `DATABASE_URL`: MySQL connection string (`mysql://user:password@host:port/db`). Without it the backend uses SQLite.
 - `BACKEND_URL`: where the frontend finds the API. Set it to `http://127.0.0.1:8000` to use your local backend. Without it the frontend uses the Render backend.
 
 Start the backend (terminal 1):
