@@ -5,9 +5,8 @@ A small app I built to add, edit, search and delete items in a product inventory
 ![Dashboard](docs/screenshots/dashboard.png)
 
 <p>
-  <img src="docs/screenshots/add-item.png" width="32%" alt="Add item page">
-  <img src="docs/screenshots/search.png" width="32%" alt="Search page">
-  <img src="docs/screenshots/api-docs.png" width="32%" alt="Swagger API docs">
+  <img src="docs/screenshots/add-item.png" width="49%" alt="Add item page">
+  <img src="docs/screenshots/search.png" width="49%" alt="Search page">
 </p>
 
 ## Why I built it
