@@ -24,3 +24,6 @@ crud_app/.env
 # OS
 .DS_Store
 Thumbs.db
+
+# windows / onedrive
+desktop.ini
