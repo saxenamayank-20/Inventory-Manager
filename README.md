@@ -1,97 +1,138 @@
 # Inventory Manager
 
-## 🔍 Description
-A comprehensive full-stack inventory management system that allows users to efficiently manage, track, and organize inventory items. This application provides real-time CRUD operations with a user-friendly interface and robust backend API for seamless data management and reporting.
+A small app I built to add, edit, search and delete items in a product inventory. It has a FastAPI backend, a MySQL database and a Streamlit frontend.
 
-## ⚙️ Tech Stack
-- **Python** - Core programming language
-- **FastAPI** - Modern web framework for building APIs
-- **SQLAlchemy** - ORM for database operations
-- **MySQL/SQL** - Relational database
-- **Streamlit** - Interactive frontend UI
-- **Pydantic** - Data validation
+![Dashboard](docs/screenshots/dashboard.png)
 
-## 🚀 Features
-- **Login System** - Secure user authentication and authorization
-- **Dashboard** - Real-time inventory overview with metrics and analytics
-- **API Integration** - RESTful API endpoints for all CRUD operations
-- **Search & Filter** - Advanced search functionality by item name and properties
-- **Inventory Tracking** - Monitor stock levels and item details
-- **Add/Edit/Delete Items** - Complete CRUD operations for inventory management
-- **Data Validation** - Ensure data integrity with Pydantic models
-- **API Documentation** - Interactive Swagger UI for API exploration
+<p>
+  <img src="docs/screenshots/add-item.png" width="32%" alt="Add item page">
+  <img src="docs/screenshots/search.png" width="32%" alt="Search page">
+  <img src="docs/screenshots/api-docs.png" width="32%" alt="Swagger API docs">
+</p>
 
-## 🧠 Learnings
-- Building scalable full-stack applications with separation of concerns
-- Implementing RESTful API design patterns
-- Working with SQLAlchemy ORM for efficient database operations
-- Creating responsive web interfaces with Streamlit
-- Database schema design for inventory management
-- Request/response validation with Pydantic v2
-- Authentication and authorization implementation
-- API documentation and Swagger integration
+- API docs (Render): https://inventory-manager-sqqa.onrender.com/docs
 
-## ▶️ How to Run
+## Why I built it
 
-### Prerequisites
-1. **Python 3.10+** installed on your system
-2. **MySQL** installed and running
-3. Create the database:
-   ```sql
-   CREATE DATABASE crud_db;
-   ```
+I wanted to build a full CRUD app with a separate frontend and backend, and deploy each part on its own free host. Keeping stock in a spreadsheet gets messy fast, so an inventory app was a good fit.
 
-### Steps to Run
+## Features
 
-**Step 1** — Clone the repository and navigate to the project directory
+- Dashboard with total products, total quantity, inventory value and average price
+- Table of all items
+- Add an item (name, price, quantity, optional description)
+- Load an item by ID and update any of its fields
+- Preview an item before deleting it
+- Search items by name (partial, case-insensitive)
+- API status indicator in the sidebar
+- Swagger docs for the API at `/docs`
+
+## Tech stack
+
+- Python 3.12
+- FastAPI 0.142 + Uvicorn
+- SQLAlchemy 2.1 + PyMySQL
+- Pydantic 2
+- Streamlit 1.65 + pandas
+- MySQL (Clever Cloud) in production, SQLite locally if no `DATABASE_URL` is set
+- pytest for the API tests
+
+Hosting: the backend is on Render, the frontend on Streamlit Cloud, and the database on Clever Cloud.
+
+## How it works
+
+The Streamlit app never talks to the database directly. It calls the FastAPI backend over HTTP with `requests`, and the backend reads and writes MySQL through SQLAlchemy. Tables are created on startup if they don't exist.
+
+```mermaid
+flowchart LR
+    U[User] --> F["Streamlit frontend<br/>(Streamlit Cloud)"]
+    F -- "HTTP / JSON" --> B["FastAPI backend<br/>(Render)"]
+    B -- "SQLAlchemy + PyMySQL" --> D[("MySQL<br/>(Clever Cloud)")]
+```
+
+## Run it locally
+
+Prerequisites: Python 3.11+ and git. MySQL is optional: without it the backend uses a local SQLite file.
+
 ```bash
+git clone https://github.com/saxenamayank-20/Inventory_Manager.git
 cd Inventory_Manager
-```
 
-**Step 2** — Create and activate virtual environment
-```bash
-python -m venv venv
-venv\Scripts\activate  # On Windows
-```
+python3 -m venv .venv
+source .venv/bin/activate        # windows: .venv\Scripts\activate
 
-**Step 3** — Install dependencies
-```bash
 pip install -r requirements.txt
+
+cp .env.example .env             # windows: copy .env.example .env
 ```
 
-**Step 4** — Configure database credentials
-Edit the `.env` file:
-```
-DATABASE_URL=mysql+pymysql://root:YOUR_PASSWORD@localhost:3306/crud_db
-```
+Fill in `.env`:
 
-**Step 5** — Start the FastAPI backend (Terminal 1)
+- `DATABASE_URL`: MySQL connection string (`mysql+pymysql://...`). Remove the line to use SQLite.
+- `BACKEND_URL`: where the frontend finds the API. Use `http://127.0.0.1:8000` for local.
+
+Start the backend (terminal 1):
+
 ```bash
 uvicorn backend.main:app --reload
 ```
-Backend API: http://127.0.0.1:8000  
-API Docs: http://127.0.0.1:8000/docs
 
-**Step 6** — Start the Streamlit frontend (Terminal 2)
+The API runs at http://127.0.0.1:8000, with docs at http://127.0.0.1:8000/docs.
+
+Start the frontend (terminal 2, with the `.venv` activated):
+
 ```bash
 streamlit run frontend/app.py
 ```
-Frontend: http://localhost:8501
 
----
+The app opens at http://localhost:8501.
 
-## 📊 API Endpoints Reference
+## Deploying
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | / | Health check |
-| POST | /items | Create new item |
-| GET | /items | List all items |
-| GET | /items/{id} | Get item by ID |
-| PUT | /items/{id} | Update item |
-| DELETE | /items/{id} | Delete item |
-| GET | /items/search | Search items |
+- **Render (backend):** build command `pip install -r requirements.txt`, start command `uvicorn backend.main:app --host 0.0.0.0 --port $PORT`. Set `DATABASE_URL` to the Clever Cloud MySQL URL.
+- **Streamlit Cloud (frontend):** main file `frontend/app.py`. It uses the Render URL by default. Set `BACKEND_URL` in the app's secrets to point somewhere else.
 
----
+## API routes
 
-**⭐ If you found this helpful, consider starring the repository!**
+| Method | Route | What it does |
+|--------|-------|--------------|
+| GET | `/` | Health check |
+| GET | `/items` | List items (`skip`, `limit` query params, default 100) |
+| POST | `/items` | Create an item |
+| GET | `/items/search?keyword=` | Search by name, 404 if nothing matches |
+| GET | `/items/{item_id}` | Get one item |
+| PUT | `/items/{item_id}` | Update only the fields you send |
+| DELETE | `/items/{item_id}` | Delete an item |
+
+## Project structure
+
+```
+backend/      fastapi app, db setup, models, schemas, crud
+frontend/     streamlit app
+tests/        api tests (pytest, sqlite)
+docs/         screenshots
+.streamlit/   streamlit theme config
+```
+
+## Running tests
+
+```bash
+python -m pytest
+```
+
+The tests use a temporary SQLite database, so they never touch the real MySQL one.
+
+## What I learned
+
+- Render's free plan sleeps, so the first request can take close to a minute. The frontend now waits longer and shows an error instead of crashing if the backend doesn't answer.
+- `pymysql` has to be in `requirements.txt`. A `mysql+pymysql://` URL fails on startup without it.
+- On partial updates, a field sent as `null` is different from a field not sent at all. Name, price and quantity now ignore `null`, and description can still be cleared.
+- Custom dark CSS on top of Streamlit's light theme made the text unreadable. Setting the dark theme in `.streamlit/config.toml` fixed it.
+
+## Known limitations and what's next
+
+- Render's free plan sleeps, so the first load is slow.
+- There's no login. Anyone with the link can add or delete items.
+- The dashboard only shows the first 100 items.
+- Update and delete need you to type the item ID.
+- CORS allows all origins.
