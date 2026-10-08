@@ -1,0 +1,3 @@
+# app css is dark, so use streamlit's dark theme or text goes dark-on-dark
+[theme]
+base = "dark"

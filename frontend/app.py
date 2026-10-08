@@ -2,10 +2,13 @@ import os
 
 import streamlit as st
 import requests
+from dotenv import load_dotenv
 
 # ─────────────────────────────────────────────
 # Configuration
 # ─────────────────────────────────────────────
+load_dotenv()
+
 # backend url, set BACKEND_URL to point at a local backend
 BASE_URL = os.getenv("BACKEND_URL", "https://inventory-manager-sqqa.onrender.com").rstrip("/")
 # render free plan goes to sleep, so first call can be slow
