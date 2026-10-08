@@ -1,10 +1,15 @@
+import os
+
 import streamlit as st
 import requests
 
 # ─────────────────────────────────────────────
 # Configuration
 # ─────────────────────────────────────────────
-BASE_URL = "https://inventory-manager-sqqa.onrender.com"
+# backend url, set BACKEND_URL to point at a local backend
+BASE_URL = os.getenv("BACKEND_URL", "https://inventory-manager-sqqa.onrender.com").rstrip("/")
+# render free plan goes to sleep, so first call can be slow
+TIMEOUT = 60
 
 st.set_page_config(
     page_title="📦 Item Inventory Manager",
@@ -139,19 +144,27 @@ st.markdown("""
 # ─────────────────────────────────────────────
 def fetch_all_items():
     try:
-        r = requests.get(f"{BASE_URL}/items", timeout=5)
+        r = requests.get(f"{BASE_URL}/items", timeout=TIMEOUT)
         if r.status_code == 200:
             return r.json()
-    except requests.exceptions.ConnectionError:
-        st.error("❌ Cannot connect to FastAPI backend. Make sure it's running on port 8000.")
+    except requests.exceptions.RequestException:
+        st.error(f"❌ Cannot connect to backend at {BASE_URL}")
     return []
+
+
+def error_detail(r, default):
+    # a 500 comes back as plain text, not json
+    try:
+        return r.json().get("detail", default)
+    except ValueError:
+        return r.text or default
 
 
 def check_backend():
     try:
-        r = requests.get(BASE_URL, timeout=3)
+        r = requests.get(BASE_URL, timeout=TIMEOUT)
         return r.status_code == 200
-    except:
+    except requests.exceptions.RequestException:
         return False
 
 
@@ -213,7 +226,7 @@ if page == "🏠 Dashboard":
         df.columns = ["ID", "Name", "Description", "Price (₹)", "Quantity", "Created At"]
         df["Price (₹)"] = df["Price (₹)"].map(lambda x: f"₹{x:,.2f}")
         df["Created At"] = pd.to_datetime(df["Created At"]).dt.strftime("%Y-%m-%d %H:%M")
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, width="stretch", hide_index=True)
     else:
         st.info("🫙 No items in inventory yet. Use **➕ Add Item** to get started!")
 
@@ -247,14 +260,14 @@ elif page == "➕ Add Item":
                 "quantity": int(quantity),
             }
             try:
-                r = requests.post(f"{BASE_URL}/items", json=payload, timeout=5)
+                r = requests.post(f"{BASE_URL}/items", json=payload, timeout=TIMEOUT)
                 if r.status_code == 201:
                     item = r.json()
                     st.success(f"✅ Item **{item['name']}** added successfully! (ID: {item['id']})")
                     st.json(item)
                 else:
-                    st.error(f"❌ Error: {r.json().get('detail', r.text)}")
-            except requests.exceptions.ConnectionError:
+                    st.error(f"❌ Error: {error_detail(r, r.text)}")
+            except requests.exceptions.RequestException:
                 st.error("❌ Cannot reach backend. Is FastAPI running?")
 
 
@@ -270,14 +283,14 @@ elif page == "✏️ Update Item":
     # Fetch current data for preview
     if st.button("📥 Load Item Data"):
         try:
-            r = requests.get(f"{BASE_URL}/items/{int(item_id)}", timeout=5)
+            r = requests.get(f"{BASE_URL}/items/{int(item_id)}", timeout=TIMEOUT)
             if r.status_code == 200:
                 st.session_state["loaded_item"] = r.json()
                 st.success("✅ Item loaded! Modify the fields below.")
             else:
-                st.error(f"❌ {r.json().get('detail', 'Item not found')}")
+                st.error(f"❌ {error_detail(r, 'Item not found')}")
                 st.session_state.pop("loaded_item", None)
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.RequestException:
             st.error("❌ Cannot reach backend.")
 
     # Show update form if item is loaded
@@ -304,14 +317,14 @@ elif page == "✏️ Update Item":
                 "quantity":    int(new_qty),
             }
             try:
-                r = requests.put(f"{BASE_URL}/items/{item['id']}", json=payload, timeout=5)
+                r = requests.put(f"{BASE_URL}/items/{item['id']}", json=payload, timeout=TIMEOUT)
                 if r.status_code == 200:
                     st.success(f"✅ Item **{r.json()['name']}** updated successfully!")
                     st.json(r.json())
                     del st.session_state["loaded_item"]
                 else:
-                    st.error(f"❌ {r.json().get('detail', 'Update failed')}")
-            except requests.exceptions.ConnectionError:
+                    st.error(f"❌ {error_detail(r, 'Update failed')}")
+            except requests.exceptions.RequestException:
                 st.error("❌ Cannot reach backend.")
 
 
@@ -327,13 +340,13 @@ elif page == "🗑️ Delete Item":
     # Preview before delete
     if st.button("🔎 Preview Item"):
         try:
-            r = requests.get(f"{BASE_URL}/items/{int(item_id)}", timeout=5)
+            r = requests.get(f"{BASE_URL}/items/{int(item_id)}", timeout=TIMEOUT)
             if r.status_code == 200:
                 st.session_state["delete_preview"] = r.json()
             else:
-                st.error(f"❌ {r.json().get('detail', 'Item not found')}")
+                st.error(f"❌ {error_detail(r, 'Item not found')}")
                 st.session_state.pop("delete_preview", None)
-        except requests.exceptions.ConnectionError:
+        except requests.exceptions.RequestException:
             st.error("❌ Cannot reach backend.")
 
     if "delete_preview" in st.session_state:
@@ -344,13 +357,13 @@ elif page == "🗑️ Delete Item":
         with col1:
             if st.button("🗑️ Confirm Delete", type="primary"):
                 try:
-                    r = requests.delete(f"{BASE_URL}/items/{item['id']}", timeout=5)
+                    r = requests.delete(f"{BASE_URL}/items/{item['id']}", timeout=TIMEOUT)
                     if r.status_code == 200:
                         st.success(r.json().get("message", "Deleted!"))
                         del st.session_state["delete_preview"]
                     else:
-                        st.error(f"❌ {r.json().get('detail', 'Delete failed')}")
-                except requests.exceptions.ConnectionError:
+                        st.error(f"❌ {error_detail(r, 'Delete failed')}")
+                except requests.exceptions.RequestException:
                     st.error("❌ Cannot reach backend.")
         with col2:
             if st.button("❌ Cancel"):
@@ -368,7 +381,7 @@ elif page == "🔍 Search Items":
     keyword = st.text_input("🔎 Enter search keyword", placeholder="e.g. lap")
     if st.button("🔍 Search") and keyword:
         try:
-            r = requests.get(f"{BASE_URL}/items/search", params={"keyword": keyword}, timeout=5)
+            r = requests.get(f"{BASE_URL}/items/search", params={"keyword": keyword}, timeout=TIMEOUT)
             if r.status_code == 200:
                 results = r.json()
                 st.success(f"✅ Found **{len(results)}** item(s) matching **'{keyword}'**")
@@ -376,8 +389,8 @@ elif page == "🔍 Search Items":
                 df = pd.DataFrame(results)[["id", "name", "description", "price", "quantity"]]
                 df.columns = ["ID", "Name", "Description", "Price (₹)", "Qty"]
                 df["Price (₹)"] = df["Price (₹)"].map(lambda x: f"₹{x:,.2f}")
-                st.dataframe(df, use_container_width=True, hide_index=True)
+                st.dataframe(df, width="stretch", hide_index=True)
             else:
-                st.warning(f"🔍 {r.json().get('detail', 'No results found')}")
-        except requests.exceptions.ConnectionError:
+                st.warning(f"🔍 {error_detail(r, 'No results found')}")
+        except requests.exceptions.RequestException:
             st.error("❌ Cannot reach backend.")
